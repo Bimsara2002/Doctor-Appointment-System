@@ -2,17 +2,17 @@
 require_once "config/db.php";
 require_once "auth.php";
 
-// ✅ Only staff can book appointments
+// Only staff can book appointments
 require_role("staff");
 
-/* Fetch doctors for dropdown */
+// Fetch doctors for dropdown
 $doctors = [];
 $res = $conn->query("SELECT id, doctor_name, specialization, available_from, available_to FROM doctors ORDER BY doctor_name ASC");
 if ($res) {
   while ($row = $res->fetch_assoc()) $doctors[] = $row;
 }
 
-/* Prefill doctor from URL */
+// Check if we have a doctor_id in GET for pre-filling
 $prefill_doctor_id = (int)($_GET["doctor_id"] ?? 0);
 $selectedDoctor = null;
 
@@ -24,7 +24,7 @@ if ($prefill_doctor_id > 0) {
   $stmtDoc->close();
 }
 
-/* Keep typed values when doctor reload happens via GET */
+// Pre-fill form from GET if not coming from a submit POST
 if (!isset($_POST["submit"])) {
   $_POST["patient_name"] = $_GET["patient_name"] ?? ($_POST["patient_name"] ?? "");
   $_POST["phone"] = $_GET["phone"] ?? ($_POST["phone"] ?? "");
@@ -36,10 +36,10 @@ if (!isset($_POST["submit"])) {
 $success = "";
 $error = "";
 
-/* Current selected doctor id (POST first, else URL) */
+
 $currentSelectedDoctorId = (int)($_POST["doctor_id"] ?? ($prefill_doctor_id ?: 0));
 
-/* If POST selected a different doctor, update selectedDoctor */
+// If doctor changed via form, update selectedDoctor details
 if ($currentSelectedDoctorId > 0 && (!$selectedDoctor || (int)$selectedDoctor["id"] !== $currentSelectedDoctorId)) {
   $stmtDoc2 = $conn->prepare("SELECT id, doctor_name, specialization, available_from, available_to FROM doctors WHERE id=?");
   $stmtDoc2->bind_param("i", $currentSelectedDoctorId);
